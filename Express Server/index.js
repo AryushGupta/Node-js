@@ -7,6 +7,17 @@ const PORT = 3000;
 // middleware - Plugin
 app.use(express.urlencoded({ extended: false }));
 
+// custom middleware
+app.use((req, res, next) => {
+  fs.appendFile('./log.txt', `${Date.now()} : ${req.method} : ${req.path}\n`, (err, data) => {
+    if (err) {
+      res.send('Error occcurred!');
+      return;
+    } else {
+      next();
+    }
+  });
+});
 
 // Routes
 
@@ -21,6 +32,9 @@ app.get('/users', (req, res) => {
 
 
 app.get('/api/users', (req, res) => {
+  res.setHeader('X-Name', 'Aryush Gupta');  // Custom header
+  // Always add X to custom headers
+  console.log(req.headers);
   return res.json(users);
 });
 
@@ -30,11 +44,11 @@ app
   .get((req, res) => {
     const id = Number(req.params.id);
 
-    const idExistsIndex = users.findIndex((user) => user.id === id);
-    if (idExistsIndex !== -1) {
-      return res.json(users[idExistsIndex]);
+    const user = users.find((user) => user.id === id);
+    if (user) {
+      return res.status(200).json(user);
     } else {
-      return res.json({ status: `${id} doesn't exist` });
+      return res.status(404).json({error : "User not found!😶‍🌫️"});
     }
 
   })
@@ -57,11 +71,11 @@ app
         if (err) {
           return res.json({ status: `${err}🐒` });
         } else {
-          return res.json({ status: 'Done 👍🏽' });
+          return res.status(201).json({ status: 'Done 👍🏽' });
         }
       });
     } else {
-      return res.json({ status: `${id} doesn't exist` });
+      return res.status(404).json({ status: `${id} doesn't exist` });
     }
 
   })
@@ -96,6 +110,9 @@ app.post('/api/users', (req, res) => {
   // Create new user
 
   const body = req.body;
+  if (!body || !body.first_name || !body.last_name || !body.email || !body.gender || !body.job_title) {
+    return res.status(400).json({ msg: "All fields are required!" });
+  }
 
   users.push({ id: users.length + 1, ...body });
 
@@ -103,7 +120,7 @@ app.post('/api/users', (req, res) => {
     if (err) {
       return res.json({ status: `${err} 🐒` });
     } else {
-      return res.json({ status: `Done 🗿`, id: users.length });
+      return res.status(201).json({ status: `Done 🗿`, id: users.length });
     }
   });
 
