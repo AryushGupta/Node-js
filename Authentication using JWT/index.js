@@ -43,7 +43,6 @@ app.get('/users', (req, res) => {
   const token = req.headers.authorization;
   try {
     const decoded = jwt.verify(token, jwtPassword);
-    console.log(decoded);
     const username = decoded.username;
     const otherUsers = ALL_USERS.filter((user) => {
       return (user.username !== username);
